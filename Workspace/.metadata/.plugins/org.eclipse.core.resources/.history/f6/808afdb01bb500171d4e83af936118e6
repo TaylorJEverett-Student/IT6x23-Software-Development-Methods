@@ -1,0 +1,239 @@
+
+package EpicVotingSystem;
+
+import java.io.*;
+import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+//import java.text.ParseException;
+
+/*
+ * File Name :Controller
+ * author :Taylor Everett
+ * Date :27/9/2017
+ * Description :version 1.2
+ */
+
+public class VotingController {
+	// Create an Array list read & store staff & candidate data from file
+	private ArrayList<Staff> staffs = new ArrayList<Staff>();
+	private ArrayList<Candidate> candidates = new ArrayList<Candidate>();
+	private ArrayList<admin> admins = new ArrayList<admin>();
+
+	// Type to access individual staff & candidate from array list
+	private Staff theStaff;
+	private Candidate theCandidate;
+	private admin theAdmin;
+
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+	Date today = Calendar.getInstance().getTime();// compare getTime() to
+
+	// Using DateFormat format method we can create a string
+	String reportDate = sdf.format(today);
+	String deadLine = "2017.10.30.12.00.00";
+
+	// VotingController constructor
+	public VotingController() {
+		loadStaffData();
+		loadCandidateData();
+		loadAdminData();
+	}
+
+	// loads candidates from file. This method is complete and working ok.
+	public void loadCandidateData() {
+		try {
+			candidates.clear();
+			String fileName = "candidates.txt";
+			File theFile = new File(fileName);
+			BufferedReader reader = new BufferedReader(new FileReader(theFile));
+
+			String candidateData;
+
+			while ((candidateData = reader.readLine()) != null) {
+				String[] candidateDetails = candidateData.split(",");
+				int code = Integer.parseInt(candidateDetails[0]);
+				int votes = Integer.parseInt(candidateDetails[2]);
+				theCandidate = new Candidate(code, candidateDetails[1], votes);
+				candidates.add(theCandidate);
+			}
+			reader.close();
+		} catch (IOException e) {
+			System.out.println("Error! Could not load candidate names from file");
+		}
+	}
+
+	// returns a staff if found in the staffs ArrayList
+	public Staff getStaff(int id) {
+		Iterator<Staff> it = staffs.iterator();
+		while (it.hasNext()) {
+			theStaff = (Staff) it.next();
+			if (theStaff.getId() == id) {
+				return theStaff;
+			}
+		}
+		return null;
+	}
+
+	// returns the collection of candidates
+	public ArrayList<Candidate> getCandidates() {
+		return candidates;
+	}
+
+	// returns total number of staffs in the collection
+	public int getTotalVoters() {
+		return staffs.size();
+	}
+
+	// every staff vote must be saved to file
+	public void recordVote() {
+		theStaff.setVoted();
+		theStaff.setDate(reportDate);
+		theCandidate.addVote();
+		saveStaffData();// save to file
+		saveCandidateData();// save to file
+	}
+
+	// writes staffs back to file
+	public void saveStaffData() {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter("staff.txt"));
+			Iterator<Staff> it = staffs.iterator();
+			String staffDetails;
+			while (it.hasNext()) {
+				theStaff = (Staff) it.next();
+				staffDetails = theStaff.getId() + "," + theStaff.getName() + "," + theStaff.hasVoted() + ","
+						+ theStaff.getPassword() + "," + theStaff.getDate() + "\n";
+				writer.write(staffDetails);
+			}
+			writer.close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+
+	// =================================================================
+
+	//This method writes the data from candidates Arraylist back to candidate.txt and data in the file is overwritten. 
+	//The structure of data in the file must match the way it's written in the method
+	public void saveCandidateData() {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter("candidates.txt"));
+			Iterator<Candidate> it = candidates.iterator();
+			String candidateDetails;
+			while (it.hasNext()) {
+				theCandidate = (Candidate) it.next();
+				candidateDetails = theCandidate.getCandidateCode() + "," + theCandidate.getName() + ","
+						+ theCandidate.getVotes() + "\n";
+				writer.write(candidateDetails);
+			}
+			writer.close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+	}
+	// =================================================================
+
+	// =================================================================
+	// loads staff names from file.
+	public void loadStaffData() {
+		try {
+			staffs.clear();
+			String fileName = "staff.txt";
+
+			File theFile = new File(fileName);
+
+			BufferedReader reader = new BufferedReader(new FileReader(theFile));
+
+			String staffData;
+			String[] staffDetails;
+
+			while ((staffData = reader.readLine()) != null) {
+				staffDetails = staffData.split(",");
+				int id = Integer.parseInt(staffDetails[0]);
+				int voted = Integer.parseInt(staffDetails[2]);
+				String password = staffDetails[3];
+				String date = staffDetails[4];
+				theStaff = new Staff(id, staffDetails[1], voted, password, date);
+
+				staffs.add(theStaff);
+			}
+			reader.close();
+		} catch (IOException e) {
+			System.out.println("Error! Could not load staff names from file");
+		} catch (Exception e) {
+			System.out.println("Error! Unknown problem could not load the staff names from file.");
+		}
+	}
+
+	// =================================================================
+
+	// =================================================================
+	//
+	public Candidate getCandidate(int candidateCode) {
+		Iterator<Candidate> it = candidates.iterator();
+		while (it.hasNext()) {
+			theCandidate = (Candidate) it.next();
+			if (theCandidate.getCandidateCode() == candidateCode) {
+				return theCandidate;
+			}
+		}
+		return null;
+	}
+
+	// =================================================================
+	//
+	public void loadAdminData() {
+		try {
+			admins.clear();
+			String fileName = "admin.txt";
+			File theFile = new File(fileName);
+			BufferedReader reader = new BufferedReader(new FileReader(theFile));
+
+			String adminData;
+
+			while ((adminData = reader.readLine()) != null) {
+				String[] adminDetails = adminData.split(",");
+
+				int code = Integer.parseInt(adminDetails[0]);
+				String Name = adminDetails[1];
+				String adminUserName = adminDetails[2];
+				String adminPassWord = adminDetails[3];
+
+				theAdmin = new admin(code, Name, adminUserName, adminPassWord);
+				admins.add(theAdmin);
+			}
+			reader.close();
+		} catch (IOException e) {
+			System.out.println("Error! Could not load Admin names from file");
+		}
+	}
+
+	public admin getAdminUsername(String adminUserName) {
+		Iterator<admin> it = admins.iterator();
+		while (it.hasNext()) {
+			theAdmin = (admin) it.next();
+			if ((theAdmin.getUserName()).equals(adminUserName)) {
+				return theAdmin;
+			}
+		}
+		return null;
+	}
+
+	public ArrayList<admin> getAdmins() {
+		return admins;
+	}
+
+	public ArrayList<Staff> getStaff() {
+		return staffs;
+	}
+
+	public void checkDate() {
+		if (reportDate.compareTo(deadLine) > 0) {//compares the time now to deadline set
+			theStaff.setExpireVote();//sets voted to 2
+			saveStaffData();//save if conditions are met so expired voters can't vote
+		} else {
+
+		} 
+	}
+
+}
